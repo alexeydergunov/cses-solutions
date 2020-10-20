@@ -93,6 +93,6 @@ int main() {
         auto totalTime = chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
         cerr << "Total time for input " << s << ": " << totalTime << " ms" << endl;
 
-        cout << ans << endl;
+        cout << ans << '\n';
     }
 }

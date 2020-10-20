@@ -38,6 +38,6 @@ int main() {
         for (int s : ans) {
             cout << s << ' ';
         }
-        cout << endl;
+        cout << '\n';
     }
 }

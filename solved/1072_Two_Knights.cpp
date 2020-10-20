@@ -47,6 +47,6 @@ int main() {
     int n;
     cin >> n;
     for (int k = 1; k <= n; k++) {
-        cout << f(k) << endl;
+        cout << f(k) << '\n';
     }
 }
