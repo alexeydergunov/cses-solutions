@@ -1,3 +1,6 @@
+#pragma GCC optimize("Ofast")
+#pragma GCC target("sse,sse2,sse3,ssse3,sse4,popcnt,abm,mmx,avx,fma,tune=native")
+
 #include <bits/stdc++.h>
 using namespace std;
 #define all(v) (v).begin(),(v).end()
@@ -20,7 +23,7 @@ bool used[n][n];
 int ans;
 
 inline bool inRange(const int x, const int y) {
-    return (0 <= x && x < n) && (0 <= y && y < n);
+    return (x < n) && (0 <= x) && (0 <= y) && (y < n); // right order matters
 }
 
 inline bool isFree(const int x, const int y) {
