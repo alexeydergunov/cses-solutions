@@ -28,7 +28,6 @@ int main() {
                 vector<int> path = {x};
                 vis[x] = i;
                 while (true) {
-                    cerr << "in " << x << endl;
                     x = p[x];
                     if (vis[x] != -1) break;
                     path.push_back(x);
