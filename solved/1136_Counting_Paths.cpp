@@ -79,42 +79,34 @@ int main() {
             return parent[0][x];
         };
 
-        vector<vector<int>> pathStarts(n);
-        vector<vector<int>> pathEnds(n);
-        for (int id = 0; id < m; id++) {
-            const auto [x, y] = paths[id];
+        vector<int> pathStarts(n);
+        vector<int> pathEnds(n);
+        for (const auto [x, y] : paths) {
             const int lca = getLCA(x, y);
-            pathStarts[x].push_back(id);
-            pathStarts[y].push_back(id);
-            pathEnds[lca].push_back(id);
+            pathStarts[x]++;
+            pathStarts[y]++;
+            pathEnds[lca] += 2;
         }
 
         vector<int> ans(n);
-        vector<unordered_set<int>> sets(n);
-        function<void(int,int)> dfs2 = [&](const int x, const int p) {
-            unordered_set<int>& curPaths = sets[x];
+        function<int(int,int)> dfs2 = [&](const int x, const int p) {
+            int curPaths = 0;
             for (const int y : g[x]) {
                 if (y == p) {
                     continue;
                 }
-                dfs2(y, x);
-                unordered_set<int>& childPaths = sets[y];
-                if (sz(childPaths) > sz(curPaths)) {
-                    curPaths.swap(childPaths); // small-to-large
-                }
-                for (const int id : childPaths) {
-                    curPaths.insert(id);
-                }
+                const int childPaths = dfs2(y, x);
+                curPaths += childPaths;
             }
-            for (const int id : pathStarts[x]) {
-                curPaths.insert(id);
-            }
-            ans[x] = sz(curPaths);
-            for (const int id : pathEnds[x]) {
-                curPaths.erase(id);
-            }
+            curPaths += pathStarts[x];
+            assert(pathEnds[x] % 2 == 0); // because two ends meets here in lca
+            curPaths -= pathEnds[x] / 2;
+            ans[x] = curPaths;
+            curPaths -= pathEnds[x] / 2;
+            return curPaths;
         };
-        dfs2(0, -1);
+        const int pathsHigherFromRoot = dfs2(0, -1);
+        assert(pathsHigherFromRoot == 0);
 
         for (const int val : ans) {
             cout << val << ' ';
