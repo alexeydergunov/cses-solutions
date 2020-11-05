@@ -115,6 +115,34 @@ ll getLengthBeforeIntersection(Cell A, Cell B, Cell C, Cell D) {
     }
 }
 
+struct FenwickTree {
+    int n;
+    vector<int> t;
+
+    FenwickTree(const int n_) {
+        n = n_;
+        t.resize(n + 1);
+    }
+
+    void inc(int pos, const int delta) {
+        pos++; // 1-indexed
+        while (pos <= n) {
+            t[pos] += delta;
+            pos += pos & -pos;
+        }
+    }
+
+    int sum(int r) {
+        r++; // 1-indexed
+        int result = 0;
+        while (r > 0) {
+            result += t[r];
+            r -= r & -r;
+        }
+        return result;
+    }
+};
+
 const int OPEN = 0;
 const int QUERY = 1;
 const int CLOSE = 2;
@@ -122,7 +150,18 @@ const int CLOSE = 2;
 struct Event {
     int type;
     ll x, y1, y2;
+    int fenY1, fenY2;
     int index;
+
+    Event() {}
+
+    Event(int type_, ll x_, ll y1_, ll y2_, int index_) {
+        type = type_;
+        x = x_;
+        y1 = y1_;
+        y2 = y2_;
+        index = index_;
+    }
 
     bool operator < (const Event& e) const {
         if (x != e.x) return x < e.x;
@@ -157,7 +196,7 @@ bool intersect1D(const vector<Segment1D>& v, const int segCnt) {
     return false;
 }
 
-bool intersect2D(const vector<Event>& events, const map<ll, vector<Segment1D>>& byX, const map<ll, vector<Segment1D>>& byY, const int segCnt) {
+bool intersect2D(const vector<Event>& events, const int yCoordsCnt, const map<ll, vector<Segment1D>>& byX, const map<ll, vector<Segment1D>>& byY, const int segCnt) {
     for (auto& it : byX) {
         if (intersect1D(it.second, segCnt)) return true;
     }
@@ -165,26 +204,25 @@ bool intersect2D(const vector<Event>& events, const map<ll, vector<Segment1D>>& 
         if (intersect1D(it.second, segCnt)) return true;
     }
 
-    multiset<ll> opened;
+    // it's possible to do it with multiset, but fenwick tree is faster
+    FenwickTree t(yCoordsCnt);
     for (const Event& e : events) {
         if (e.index >= segCnt) {
             // skipped by binary search
             continue;
         }
         if (e.type == OPEN) {
-            opened.insert(e.y1);
+            t.inc(e.fenY1, 1);
         } else if (e.type == CLOSE) {
-            opened.erase(opened.find(e.y1));
+            t.inc(e.fenY1, -1);
         } else {
-            auto it = opened.lower_bound(e.y1);
-            if (it != opened.end()) {
-                if (*it <= e.y2) {
-                    return true;
-                }
+            const int s = t.sum(e.fenY2) - t.sum(e.fenY1 - 1);
+            if (s > 0) {
+                return true;
             }
         }
     }
-    assert(opened.empty());
+    assert(t.sum(yCoordsCnt - 1) == 0);
     return false;
 }
 
@@ -263,17 +301,39 @@ int main() {
             auto [x2, y2] = segments[i].second;
             if (x1 == x2) {
                 if (y1 > y2) swap(y1, y2);
-                events.push_back(Event{QUERY, x1, y1, y2, i});
+                events.push_back(Event(QUERY, x1, y1, y2, i));
             } else {
                 if (x1 > x2) swap(x1, x2);
-                events.push_back(Event{OPEN, x1, y1, y2, i});
-                events.push_back(Event{CLOSE, x2, y1, y2, i});
+                events.push_back(Event(OPEN, x1, y1, y2, i));
+                events.push_back(Event(CLOSE, x2, y1, y2, i));
             }
         }
         sort(all(events));
         auto evT2 = chrono::high_resolution_clock::now();
         auto evTime = chrono::duration_cast<chrono::milliseconds>(evT2 - evT1).count();
         cerr << "Events time: " << evTime << " ms" << endl;
+
+        // compression - for using fenwick tree instead of multiset in binary search
+        auto comprT1 = chrono::high_resolution_clock::now();
+        vector<ll> yCoords;
+        yCoords.reserve(2 * sz(events));
+        for (const Event& e : events) {
+            yCoords.push_back(e.y1);
+            yCoords.push_back(e.y2);
+        }
+        sort(all(yCoords));
+        yCoords.resize(unique(all(yCoords)) - yCoords.begin());
+        for (int i = 0; i < sz(yCoords) - 1; i++) {
+            assert(yCoords[i] < yCoords[i + 1]);
+        }
+        for (Event& e : events) {
+            e.fenY1 = int(lower_bound(all(yCoords), e.y1) - yCoords.begin());
+            e.fenY2 = int(lower_bound(all(yCoords), e.y2) - yCoords.begin());
+            assert(e.fenY1 <= e.fenY2);
+        }
+        auto comprT2 = chrono::high_resolution_clock::now();
+        auto comprTime = chrono::duration_cast<chrono::milliseconds>(comprT2 - comprT1).count();
+        cerr << "Compression time: " << comprTime << " ms" << endl;
 
         // find the maximal number of commands so there is no intersection
         auto bsT1 = chrono::high_resolution_clock::now();
@@ -282,7 +342,7 @@ int main() {
         int ansCnt = 0;
         while (left <= right) {
             int mid = (left + right) / 2;
-            if (intersect2D(events, byX, byY, mid)) {
+            if (intersect2D(events, sz(yCoords), byX, byY, mid)) {
                 right = mid - 1;
             } else {
                 left = mid + 1;
