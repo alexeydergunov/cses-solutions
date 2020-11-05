@@ -15,7 +15,6 @@ g++ ^
   -Wduplicated-cond ^
   -Wcast-qual ^
   -Wcast-align ^
-  -D_GLIBCXX_DEBUG ^
   -D_GLIBCXX_DEBUG_PEDANTIC ^
   -D_FORTIFY_SOURCE=2 ^
   -fno-sanitize-recover ^
