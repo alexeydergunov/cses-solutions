@@ -13,7 +13,7 @@ int main() {
 
     // (here indices are 0-based)
     // we should keep xor of all odd indices equal to 0
-    // if the opponent moves some balls from odd index to even: 
+    // if the opponent moves some balls from odd index to even:
     //     we move from some odd index to even too, as in nim, keeping xor equal to 0
     // if the opponent moves some balls from even index to odd:
     //     we pass exactly these balls forward (from odd index to even), and xor is still 0

@@ -73,7 +73,7 @@ int main() {
     while (cin >> clauseCnt >> n) {
         // 0, 2, 4, ..., (2n - 2) - positive
         // 1, 3, 5, ..., (2n - 1) - negative
-        vector<vector<int>> g(2 * n); 
+        vector<vector<int>> g(2 * n);
         while (clauseCnt--) {
             char cx, cy;
             int x, y;

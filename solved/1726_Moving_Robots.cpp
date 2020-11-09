@@ -77,7 +77,7 @@ int main() {
         }
         a = binpow(a, k);
 
-        ld ans = 0.0;        
+        ld ans = 0.0;
         for (int idTo = 0; idTo < 64; idTo++) {
             ld cellAns = 1.0;
             for (int idFrom = 0; idFrom < 64; idFrom++) {
