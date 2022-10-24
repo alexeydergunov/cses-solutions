@@ -29,6 +29,20 @@ int main() {
             inorderPos[inorder[i]] = i;
         }
 
+        auto binarySearch = [&](int L, int R, const int root) { // [L, R]
+            int ans = R + 1;
+            while (L <= R) {
+                int mid = (L + R) / 2;
+                if (inorderPos[preorder[mid]] < inorderPos[root]) {
+                    L = mid + 1;
+                } else {
+                    ans = mid;
+                    R = mid - 1;
+                }
+            }
+            return ans;
+        };
+
         vector<int> postorder;
         function<void(int,int)> rec = [&](const int L, const int R) { // [L, R)
             assert(L <= R);
@@ -36,10 +50,7 @@ int main() {
                 return;
             }
             const int root = preorder[L];
-            int mid = L + 1;
-            while (mid < R && inorderPos[preorder[mid]] < inorderPos[root]) {
-                mid++;
-            }
+            int mid = binarySearch(L + 1, R - 1, root);
             rec(L + 1, mid);
             rec(mid, R);
             postorder.push_back(root);
